@@ -1,0 +1,51 @@
+import PySimpleGUI as sg
+import requests
+from bs4 import BeautifulSoup
+from random import randint
+import webbrowser
+
+URL = 'https://www.officialcharts.com/charts/singles-chart/'
+page = requests.get(URL)
+soup = BeautifulSoup(page.content, 'html.parser')
+songTitle = soup.find_all('div', class_='title')
+list = []
+for title in songTitle:
+    list.append(title.text.strip())
+
+artistName = soup.find_all('div', class_='artist')
+artistList = []
+for artist in artistName:
+    artistList.append(artist.text.strip())
+
+sg.theme('Black')
+
+layout = [  [sg.Text('Title: ', size=(10, 5)), sg.Text('', key="song", size=(20, 5))],
+            [sg.Text('Artist: ', size=(10, 5)), sg.Text('', key="artist", size=(20, 5))],
+            [sg.Text('Link: ', size=(10,5)), sg.Text('', key='link', size=(20, 5), enable_events=True)],
+            [sg.Text('Link is clickable.')],
+            [sg.Button('Summon a song'), sg.Button('Close')] ]
+
+window = sg.Window('Song suggester', layout)
+
+while True:
+    event, values = window.read()
+
+    number = randint(1, 100)
+
+    if event == 'Summon a song':
+
+        window['song'].Update(list[number])
+        window['artist'].Update(artistList[number])
+        query = list[number] + "+" + artistList[number]
+        link = 'https://www.youtube.com/results?search_query=' + query.lower()
+        window['link'].Update(link.replace(" ", "+"))
+
+        print(list[number])
+        print(artistList[number])
+        print(link.replace(" ", "+"))
+
+    if event == 'link':
+        webbrowser.open(link.replace(" ", "+"))
+
+    if event == 'Close':
+        window.close()
